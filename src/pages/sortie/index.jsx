@@ -6,6 +6,7 @@ import Dialog from "./dialog"
 export default function ListeStock2() {
   // objet des produits sélectionnés
   const [selectedProducts, setSelectedProducts] = useState({});
+  const [quantite , setQuantite] = useState([]);
 
   // calcule du total global
   const totalGeneral = Object.values(selectedProducts).reduce(
@@ -159,7 +160,7 @@ export default function ListeStock2() {
 
   return (
     <div className="flex gap-3">
-      <DataTableDemo setSelectedProducts={setSelectedProducts} selectedProducts={selectedProducts} />
+      <DataTableDemo setSelectedProducts={setSelectedProducts} selectedProducts={selectedProducts} setQuantite={setQuantite} />
 
       <div className="w-[60%]  min-h-[700px] p-2 rounded-2xl">
         <div
@@ -208,7 +209,7 @@ export default function ListeStock2() {
               {Object.values(selectedProducts).map((prod, index) => (
                 <tr key={index}>
                   <td className="border border-gray-300 p-2">{prod.nom}</td>
-                  <td className="border border-gray-300 p-2 text-center">{prod.quantite}</td>
+                  <td className="border border-red-500 p-2 text-center">{prod.quantite}</td>
                   <td className="border border-gray-300 p-2 text-right">{prod.prix} F CFA</td>
                   <td className="border border-gray-300 p-2 text-right">{prod.total} F CFA</td>
                 </tr>
@@ -281,7 +282,7 @@ export default function ListeStock2() {
             disabled={loadingCredit}
           >
             {/* {loadingCredit ? <Loader2 className="animate-spin w-5 h-5" /> : "Credit"} */}
-            <Dialog selectedProducts={selectedProducts}/>
+            <Dialog quantite={quantite} selectedProducts={selectedProducts}/>
           </div>
         </div>
       </div>

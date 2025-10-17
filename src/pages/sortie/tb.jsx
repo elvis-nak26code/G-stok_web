@@ -29,7 +29,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-export const columns = (handleQuantityChange, selectedProducts) => [
+// ✅ colonne avec correction sur la gestion de la quantité
+export const columns = (handleQuantityChange, selectedProducts, setQuantite) => [
   {
     id: "select",
     header: ({ table }) => (
@@ -90,9 +91,11 @@ export const columns = (handleQuantityChange, selectedProducts) => [
   {
     id: "quantiteAchetee",
     header: () => <span className="text-lg">Quantité achetée</span>,
+    // ✅ Correction ici
     cell: ({ row }) => {
       const produitId = row.original._id
       const quantiteAchetee = selectedProducts[produitId]?.quantite || 0
+      const index = row.index // 👈 récupère la position du produit
 
       return (
         <div className="flex items-center gap-2">
@@ -100,7 +103,13 @@ export const columns = (handleQuantityChange, selectedProducts) => [
             size="sm"
             variant="outline"
             onClick={() =>
-              handleQuantityChange(produitId, Math.max(0, quantiteAchetee - 1), row.original)
+              handleQuantityChange(
+                produitId,
+                Math.max(0, quantiteAchetee - 1),
+                row.original,
+                setQuantite,
+                index // 👈 on envoie maintenant l’index
+              )
             }
           >
             -
@@ -110,7 +119,13 @@ export const columns = (handleQuantityChange, selectedProducts) => [
             size="sm"
             variant="outline"
             onClick={() =>
-              handleQuantityChange(produitId, quantiteAchetee + 1, row.original)
+              handleQuantityChange(
+                produitId,
+                quantiteAchetee + 1,
+                row.original,
+                setQuantite,
+                index // 👈 idem ici
+              )
             }
           >
             +
@@ -121,7 +136,7 @@ export const columns = (handleQuantityChange, selectedProducts) => [
   },
 ]
 
-export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
+export default function DataTableDemo({ selectedProducts, setSelectedProducts, setQuantite }) {
   const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
   const [columnVisibility, setColumnVisibility] = useState({})
@@ -130,12 +145,9 @@ export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
   const [data, setData] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // ✅ objet des produits sélectionnés
-  // const [selectedProducts, setSelectedProducts] = useState({})
-
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token")
       if (!token) throw new Error("Token non disponible")
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edit/produits`, {
@@ -158,7 +170,7 @@ export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
     fetchData()
   }, [])
 
-  const handleQuantityChange = (produitId, newQuantite, produit) => {
+  const handleQuantityChange = (produitId, newQuantite, produit, setQuantite, index) => {
     setSelectedProducts((prev) => {
       if (!prev[produitId]) return prev
       return {
@@ -170,11 +182,17 @@ export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
         },
       }
     })
+    // 🔹 Met à jour la bonne position dans le tableau
+    setQuantite((prev) => {
+      const updated = [...prev]
+      updated[index] = newQuantite
+      return updated
+    })
   }
 
   const table = useReactTable({
     data,
-    columns: columns(handleQuantityChange, selectedProducts),
+    columns: columns(handleQuantityChange, selectedProducts, setQuantite),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -190,7 +208,6 @@ export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
     },
   })
 
-  // ✅ mettre à jour selectedProducts quand on coche/décoche
   useEffect(() => {
     const newSelected = {}
     table.getRowModel().rows.forEach((row) => {
@@ -199,17 +216,13 @@ export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
           nom: row.original.nom,
           prix: row.original.prix,
           quantite: selectedProducts[row.original._id]?.quantite || 1,
-          total:
-            row.original.prix *
-            (selectedProducts[row.original._id]?.quantite || 1),
+          total: row.original.prix * (selectedProducts[row.original._id]?.quantite || 1),
         }
       }
     })
     setSelectedProducts(newSelected)
-    // alert(JSON.stringify(selectedProducts))
   }, [rowSelection, data])
 
-  // ✅ calcul du total global
   const totalGeneral = Object.values(selectedProducts).reduce(
     (acc, prod) => acc + prod.total,
     0
@@ -262,7 +275,6 @@ export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
         </DropdownMenu>
       </div>
 
-      {/* ✅ tableau */}
       <div className="overflow-x-auto rounded-md border w-full">
         <Table>
           <TableHeader>
@@ -314,7 +326,6 @@ export default function DataTableDemo({selectedProducts, setSelectedProducts}) {
         </Table>
       </div>
 
-      {/* ✅ affichage du total */}
       <div className="text-right mt-4 text-lg font-bold">
         Total général : {totalGeneral} F CFA
       </div>

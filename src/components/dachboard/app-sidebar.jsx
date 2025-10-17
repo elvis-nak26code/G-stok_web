@@ -48,7 +48,11 @@ export function AppSidebar({
           {
             title: "Vue d'ensemble",
             url: "/",
-          }
+          },
+          {
+            title: "Enregistrement de stock",
+            url: "et",
+          },
         ],
       }
     ],
@@ -73,12 +77,13 @@ export function AppSidebar({
         icon: Repeat,
         isActive: true,
         items: [
-          {
-            title: "Enregistrement de stock",
-            url: "et",
-          },
+          
           {
             title: "Vendre",
+            url: "st",
+          },
+          {
+            title: "Entrée de produits",
             url: "st",
           }
         ],
