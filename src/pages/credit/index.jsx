@@ -94,6 +94,32 @@ export default function ListeStock2() {
     printWindow.close();
   };
 
+  // suprimer un credit 
+  const [isLoading2,setIsloading2]=useState(false)
+  const delCredit = async (selectedProducts) => {
+   try {
+     setIsloading2(true)
+     const token = localStorage.getItem('token');
+     if (!token) throw new Error("Token non disponible");
+ 
+     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edit/suprimerCredit/${selectedProducts._id}`, {
+       method: "DELETE",
+       headers: {
+         "Content-Type": "application/json",
+         Authorization: `Bearer ${token}`,
+       }
+     });
+     if (!response.ok) throw new Error("Erreur lors de la supression");
+     const result = await response.json();
+     alert(result.message);
+     window.location.reload();
+     setIsloading2(false)
+   } catch (error) {
+     console.error("Erreur:", error);
+     alert(error.message);
+   }
+ };
+
  // fonction enregistrement sortie
  const [isLoading,setIsloading]=useState(false)
  const setSorties = async (selectedProducts) => {
@@ -173,7 +199,7 @@ export default function ListeStock2() {
                        credit.produits.map((prod, idx) => (
                          <tr key={idx}>
                            <td className="border border-gray-300 p-2">{prod.nom || ""}</td>
-                           <td className="border border-gray-300 p-2 text-center">{prod.quantite || 0}</td>
+                           <td className="border border-gray-300 p-2 text-center">{credit.quantitee[idx] || 0}</td>
                            <td className="border border-gray-300 p-2 text-right">{prod.prix || 0} F CFA</td>
                            {/* <td className="border border-gray-300 p-2 text-right">{credit.montantTotal || 0} F CFA</td> */}
                          </tr>
@@ -196,8 +222,12 @@ export default function ListeStock2() {
                          <td className="border border-gray-300 p-2 text-right">{credit.montantTotal} F CFA</td>
                        </tr>
                        <tr className="bg-gray-100">
-                         <td className="border border-gray-300 p-2 font-bold">Total</td>
-                         <td className="border border-gray-300 p-2 text-right font-bold">{credit.montantTotal} F CFA</td>
+                         <td className="border border-gray-300 p-2 font-bold">Montant Versé</td>
+                         <td className="border border-gray-300 p-2 text-right font-bold">{credit.montanVerse} F CFA</td>
+                       </tr>
+                       <tr className="bg-red-100 ">
+                         <td className="border border-gray-300 p-2 font-bold">Reste a payé</td>
+                         <td className="border border-gray-300 p-2 text-right font-bold">{credit.montantTotal - credit.montanVerse} F CFA</td>
                        </tr>
                      </tbody>
                    </table>
@@ -210,6 +240,14 @@ export default function ListeStock2() {
                      disabled={loading}
                    >
                      {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : "Valider et Imprimer"}
+                   </button>
+
+                   <button
+                     onClick={() => {delCredit(credit)}}
+                     className="bg-red-500 text-white px-4 py-2 rounded-md flex justify-center items-center"
+                     disabled={loading}
+                   >
+                     {isLoading2 ? <Loader2 className="animate-spin w-5 h-5" /> : "Annuler"}
                    </button>
                  </div>
                </div>

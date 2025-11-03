@@ -1,12 +1,18 @@
 import DataTableDemo from "./tb";
 import React, { useRef, useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import Dialog from "./dialog" 
+import Dialog from "./dialog";
 
 export default function ListeStock2() {
   // objet des produits sélectionnés
   const [selectedProducts, setSelectedProducts] = useState({});
-  const [quantite , setQuantite] = useState([]);
+  const [quantite, setQuantite] = useState([]);
+
+  // 🧩 synchroniser automatiquement les quantités des produits sélectionnés
+  useEffect(() => {
+    const q = Object.values(selectedProducts).map((p) => p.quantite || 0);
+    setQuantite(q);
+  }, [selectedProducts]);
 
   // calcule du total global
   const totalGeneral = Object.values(selectedProducts).reduce(
@@ -28,7 +34,7 @@ export default function ListeStock2() {
   // fonction enregistrement sortie
   const setSorties = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) throw new Error("Token non disponible");
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edit/sortie`, {
@@ -39,7 +45,9 @@ export default function ListeStock2() {
         },
         body: JSON.stringify({ sorties: selectedProducts }),
       });
-      if (!response.ok) throw new Error("Erreur lors de lenvois des donnees");
+
+      if (!response.ok) throw new Error("Erreur lors de l'envoi des données");
+
       const result = await response.json();
       alert(result.message);
       // window.location.reload();
@@ -70,27 +78,31 @@ export default function ListeStock2() {
   };
 
   useEffect(() => {
-     // fonction fetchData
-  const fetchData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error("Token non disponible");
+    // fonction fetchData
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token non disponible");
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edit/me`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error("Erreur lors de la récupération des données");
-      const result = await response.json();
-      setData(result);
-    } catch (error) {
-      console.error("Erreur:", error);
-    }
-  };
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edit/me`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Erreur lors de la récupération des données");
+
+        const result = await response.json();
+        setData(result);
+      } catch (error) {
+        console.error("Erreur:", error);
+      }
+    };
+
     fetchData();
+
     // numéro de facture
     const generateInvoiceNumber = () => {
       return "FAC-" + Date.now();
@@ -104,27 +116,13 @@ export default function ListeStock2() {
   const handlePrint = () => {
     const content = divRef.current;
     const printWindow = window.open("", "", "width=900,height=650");
-
     printWindow.document.write(`
       <html>
         <head>
           <title>Facture</title>
           <style>
-            body { 
-              margin:0; 
-              padding:20px; 
-              font-family:ui-sans-serif,system-ui,sans-serif; 
-              background:white; 
-              display:flex; 
-              justify-content:center; 
-            }
-            .container { 
-              width: 100%; 
-              max-width: 900px; 
-              padding: 24px; 
-              background: #fff; 
-              border-radius: 0.375rem; 
-            }
+            body { margin:0; padding:20px; font-family:ui-sans-serif,system-ui,sans-serif; background:white; display:flex; justify-content:center; }
+            .container { width: 100%; max-width: 900px; padding: 24px; background: #fff; border-radius: 0.375rem; }
             .text-gray-500 { color:#6B7280; }
             .text-gray-600 { color:#4B5563; }
             .font-bold { font-weight:700; }
@@ -151,7 +149,6 @@ export default function ListeStock2() {
         </body>
       </html>
     `);
-
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
@@ -160,9 +157,13 @@ export default function ListeStock2() {
 
   return (
     <div className="flex gap-3">
-      <DataTableDemo setSelectedProducts={setSelectedProducts} selectedProducts={selectedProducts} setQuantite={setQuantite} />
+      <DataTableDemo
+        setSelectedProducts={setSelectedProducts}
+        selectedProducts={selectedProducts}
+        setQuantite={setQuantite}
+      />
 
-      <div className="w-[60%]  min-h-[700px] p-2 rounded-2xl">
+      <div className="w-[60%] min-h-[700px] p-2 rounded-2xl">
         <div
           ref={divRef}
           className="mt-4 p-6 bg-white shadow-lg rounded-md w-full max-w-3xl mx-auto"
@@ -209,15 +210,21 @@ export default function ListeStock2() {
               {Object.values(selectedProducts).map((prod, index) => (
                 <tr key={index}>
                   <td className="border border-gray-300 p-2">{prod.nom}</td>
-                  <td className="border border-red-500 p-2 text-center">{prod.quantite}</td>
-                  <td className="border border-gray-300 p-2 text-right">{prod.prix} F CFA</td>
-                  <td className="border border-gray-300 p-2 text-right">{prod.total} F CFA</td>
+                  <td className="border border-gray-300 p-2 text-center">{prod.quantite}</td>
+                  <td className="border border-gray-300 p-2 text-right">
+                    {prod.prix} F CFA
+                  </td>
+                  <td className="border border-gray-300 p-2 text-right">
+                    {prod.total} F CFA
+                  </td>
                 </tr>
               ))}
-
               {Object.values(selectedProducts).length === 0 && (
                 <tr>
-                  <td colSpan={4} className="border border-gray-300 p-4 text-center text-gray-500">
+                  <td
+                    colSpan={4}
+                    className="border border-gray-300 p-4 text-center text-gray-500"
+                  >
                     Aucun produit sélectionné
                   </td>
                 </tr>
@@ -231,11 +238,15 @@ export default function ListeStock2() {
               <tbody>
                 <tr>
                   <td className="border border-gray-300 p-2 font-semibold">Sous-total</td>
-                  <td className="border border-gray-300 p-2 text-right">{totalGeneral} F CFA</td>
+                  <td className="border border-gray-300 p-2 text-right">
+                    {totalGeneral} F CFA
+                  </td>
                 </tr>
                 <tr className="bg-gray-100">
                   <td className="border border-gray-300 p-2 font-bold">Total</td>
-                  <td className="border border-gray-300 p-2 text-right font-bold">{totalGeneral} F CFA</td>
+                  <td className="border border-gray-300 p-2 text-right font-bold">
+                    {totalGeneral} F CFA
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -265,7 +276,11 @@ export default function ListeStock2() {
             className="bg-purple-600 text-white font-bold px-4 py-2 rounded-md ml-4 flex justify-center items-center"
             disabled={loadingPrint}
           >
-            {loadingPrint ? <Loader2 className="animate-spin w-5 h-5" /> : "valider et imprimer"}
+            {loadingPrint ? (
+              <Loader2 className="animate-spin w-5 h-5" />
+            ) : (
+              "valider et imprimer"
+            )}
           </button>
 
           <button
@@ -273,16 +288,18 @@ export default function ListeStock2() {
             className="bg-purple-600 text-white font-bold px-4 py-2 rounded-md ml-4 flex justify-center items-center"
             disabled={loadingSortie}
           >
-            {loadingSortie ? <Loader2 className="animate-spin w-5 h-5" /> : "Valider"}
+            {loadingSortie ? (
+              <Loader2 className="animate-spin w-5 h-5" />
+            ) : (
+              "Valider"
+            )}
           </button>
 
           <div
-            // onClick={handleCreditWithLoader}
             className="bg-purple-600 text-white px-4 py-2 rounded-md ml-4 flex justify-center items-center"
             disabled={loadingCredit}
           >
-            {/* {loadingCredit ? <Loader2 className="animate-spin w-5 h-5" /> : "Credit"} */}
-            <Dialog quantite={quantite} selectedProducts={selectedProducts}/>
+            <Dialog quantite={quantite} selectedProducts={selectedProducts} />
           </div>
         </div>
       </div>

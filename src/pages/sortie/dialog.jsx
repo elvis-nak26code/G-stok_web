@@ -18,6 +18,7 @@ export default function DialogDemo({ selectedProducts , quantite}) {
   const [nom, setNom] = useState("")
   const [numero, setNumero] = useState("")
   const [montantTotal, setMontantTotal] = useState("")
+  const [montantverse , setMontantverse] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -41,7 +42,8 @@ export default function DialogDemo({ selectedProducts , quantite}) {
           nomCeancier: nom,
           numero,
           montantTotal,
-          // quantite
+          montantverse,
+          quantitee: quantite
         }),
       })
 
@@ -99,6 +101,16 @@ export default function DialogDemo({ selectedProducts , quantite}) {
               name="montant"
               value={montantTotal}
               onChange={(e) => setMontantTotal(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-3">
+            <Label htmlFor="montant-v">Montant versé</Label>
+            <Input
+              type="number"
+              id="montant-v"
+              name="montantv"
+              value={montantverse}
+              onChange={(e) => setMontantverse(e.target.value)}
             />
           </div>
         </div>
